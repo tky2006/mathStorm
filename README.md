@@ -1,141 +1,68 @@
-# ⚡ MathStorm
-### Secondary School Mathematics Minigame
+# ⚡ MathStorm: Base Defense
+### Secondary School Mathematics Action Game
 
 ---
 
 ## 📖 Overview
 
-**MathStorm** is a fast-paced, browser-based minigame designed to reinforce secondary school mathematics in a fun and engaging way. Players must catch falling answer bubbles that correspond to equations displayed on screen — all before the timer runs out!
+**MathStorm: Base Defense** is a fast-paced, action-oriented HTML5 Canvas minigame designed to reinforce math skills without feeling like a traditional quiz. Players take control of a central base and must defend it from incoming numbered asteroids.
 
-Built entirely in a **single HTML file** using pure HTML, CSS, and JavaScript (no frameworks, no external assets). Background music is generated procedurally using the **Web Audio API**.
+Instead of answering multiple-choice questions, players engage in "Math Combat." By shooting "Ammo" numbers at the incoming enemies, the values are added together. If the sum matches the round's Target Number, the enemy is destroyed!
+
+Built entirely in a **single HTML file** using HTML5 Canvas, CSS, and Vanilla JavaScript. Audio is generated procedurally using the **Web Audio API**.
 
 ---
 
 ## 🎮 How to Play
 
 1. Open `index.html` in any modern web browser.
-2. Click **▶ Play Now** on the start screen.
-3. Read the instructions, then click **🚀 Let's Go!** to begin.
-4. A maths equation with a missing value `?` appears in the centre of the screen.
-5. **Click the bubble** containing the correct answer before it falls off the screen.
-6. Survive all **10 rounds** to complete the storm!
-
-### Controls
-| Action | Input |
-|--------|-------|
-| Answer a question | Click the correct bubble |
-| Pause / Resume | Press `Escape` |
-| Mute / Unmute | Click the 🔊 button in the HUD |
+2. Click **Start Game** on the main menu.
+3. Your base is in the center of the screen. Your cannon aims wherever your mouse cursor points.
+4. **HUD / Information:** Look at the top of the screen to see your current Round (out of 10) and the Target Number.
+5. **Select Ammo:** Look at the bottom of the screen to see your available Ammo numbers. Select an ammo type by clicking on it or pressing numbers `1` through `5` on your keyboard.
+6. **Fire!** Click the mouse to shoot your selected Ammo at the incoming asteroids.
+7. **Math Combat:**
+   - When your Ammo hits an asteroid, their values are added together.
+   - If `Ammo + Asteroid = Target Number`, the asteroid explodes!
+   - If they do NOT equal the target number, the asteroid absorbs your ammo, getting larger and changing its value to the sum.
+8. Protect your base! If an asteroid hits the center, you lose a life.
 
 ---
 
-## ⭐ Scoring System
+## ⭐ Scoring & Progression
 
-| Event | Points |
-|-------|--------|
-| Correct answer | **100 pts** base |
-| Time bonus | **+10 pts** × seconds remaining |
-| Combo ×2 | Score × 2 multiplier |
-| Combo ×3 | Score × 3 multiplier |
-| Combo ×4 (max) | Score × 4 multiplier |
-| Wrong answer | 0 pts + lose 1 life |
-| Timeout | 0 pts + lose 1 life |
-
-### Stars Per Round
-| Speed | Stars Awarded |
-|-------|---------------|
-| ≥ 12 seconds remaining | ⭐⭐⭐ |
-| 7 – 11 seconds remaining | ⭐⭐ |
-| < 7 seconds remaining | ⭐ |
-| Wrong / timeout | ☆☆☆ |
+| Action | Result |
+|--------|--------|
+| Destroy Asteroid | **+100 pts** |
+| Absorb Ammo (wrong math) | Asteroid grows larger, value changes |
+| Base Hit | Lose 1 Life |
+| 500 Points Scored | Advance to next Round (New Target, Faster Enemies) |
+| Complete 10 Rounds | **Victory!** Game Complete |
 
 ---
 
 ## ❤️ Lives
 
 - Players start with **3 lives**.
-- A life is lost for each **wrong answer** or **timeout**.
-- Losing all 3 lives ends the game immediately.
+- A life is lost every time an asteroid collides with the central base.
+- Losing all 3 lives results in a **Game Over**.
 
 ---
 
-## 🔥 Combo System
+## 👨‍💻 Technical Details
 
-Answering questions correctly in a row builds a combo:
+| Property | Value |
+|----------|-------|
+| Architecture | Single-Page Application (SPA) |
+| Language | HTML5, CSS3, Vanilla JavaScript (ES6) |
+| Rendering | HTML5 `<canvas>` API (2D Context) |
+| Audio | Procedural Web Audio API (No external mp3/wav files) |
+| Dependencies | Google Fonts (Orbitron, Inter) |
 
-| Streak | Multiplier | Label |
-|--------|------------|-------|
-| 2 in a row | ×2 | 🔥 ×2 COMBO! |
-| 3 in a row | ×3 | ⚡ ×3 STORM! |
-| 4+ in a row | ×4 | 💥 ×4 BLITZ! |
-
-Any wrong answer or timeout **resets** the combo.
-
----
-
-## 🧮 Mathematics Topics
-
-MathStorm covers **10 secondary school mathematics topics**:
-
-| Topic | Example Questions |
-|-------|-------------------|
-| **Algebra** | Solve for x: `2x - 4 = 10` |
-| **Fractions** | `3/4 × 20 = ?` |
-| **Percentages** | `20% of 80 = ?` |
-| **Indices** | `2⁵ = ?`, `√144 = ?` |
-| **Geometry** | Area, perimeter, angles |
-| **Ratio & Proportion** | Simplify ratios, find unknowns |
-| **Linear Equations** | Evaluate `y = 2x + 1` |
-| **Statistics** | Mean, median, mode |
-| **Trigonometry** | `sin 90°`, `cos 0°`, `tan 45°` |
-| **Quadratics** | Solve `x² = 64` |
-
----
-
-## 🔊 Audio
-
-All audio is **synthesised in real-time** using the Web Audio API — no external sound files are required.
-
-| Sound | Trigger |
-|-------|---------|
-| 🎵 Background music | Plays during gameplay (chiptune, BPM 140) |
-| ✅ Correct SFX | Ascending three-note chime |
-| ❌ Wrong SFX | Low buzzer sound |
-| ⏱️ Timeout SFX | Two-tone warning |
-| 🔥 Combo SFX | Four-note ascending fanfare |
-| 🎉 Victory SFX | Seven-note melody on game complete |
-| 💀 Game Over SFX | Descending sawtooth tones |
-
-The background music features 5 layered tracks:
-- **Lead melody** (square wave)
-- **Counter melody** (triangle wave)
-- **Walking bass line** (sawtooth wave)
-- **Pad chords** (sine waves)
-- **Drum kit** (kick, snare, hi-hat via noise buffers)
-
----
-
-## 🗂️ File Structure
-
-```
-game_1_mathstorm/
-├── index.html      ← Complete game (single file)
-└── README.md       ← This file
-```
-
----
-
-## 🌐 Browser Compatibility
-
-| Browser | Support |
-|---------|---------|
-| Google Chrome | ✅ Full |
-| Mozilla Firefox | ✅ Full |
-| Microsoft Edge | ✅ Full |
-| Safari | ✅ Full (click to unlock audio) |
-| Opera | ✅ Full |
-
-> **Note:** Web Audio API requires a user interaction (click) before audio can start. Clicking **Play Now** satisfies this requirement automatically.
+### Key Systems:
+- **Custom Physics Engine:** Handles velocity vectors, bounding-circle collision detection, and particle physics.
+- **Dynamic Targeting:** Procedurally generates valid enemy and ammo values to guarantee solvability based on the round's target.
+- **Procedural Audio:** Synthesizes retro sound effects (explosions, lasers, hits) in real-time.
 
 ---
 
@@ -157,17 +84,4 @@ python -m http.server 8000
 
 ---
 
-## 👨‍💻 Technical Details
-
-| Property | Value |
-|----------|-------|
-| Language | HTML5, CSS3, Vanilla JavaScript (ES5-compatible) |
-| Audio | Web Audio API (procedural synthesis) |
-| Graphics | CSS animations + Canvas (starfield) |
-| File size | ~67 KB (single file) |
-| Dependencies | Google Fonts (Inter, Orbitron) — optional |
-| Framework | None |
-
----
-
-*MathStorm — Making maths exciting, one bubble at a time! 🌪️*
+*MathStorm — Defend the base with the power of addition! 🌪️*
