@@ -3,7 +3,7 @@
 
 ---
 ## 🔗 Quick Access
-https://tky2006.github.io/mathStrom/
+https://tky2006.github.io/mathStorm/
 
 ---
 ## 📖 Overview
