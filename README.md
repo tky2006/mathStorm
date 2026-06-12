@@ -2,7 +2,10 @@
 ### Secondary School Mathematics Action Game
 
 ---
+## 🔗 Quick Access
+https://tky2006.github.io/mathStrom/
 
+---
 ## 📖 Overview
 
 **MathStorm: Base Defense** is a fast-paced, action-oriented HTML5 Canvas minigame designed to reinforce math skills without feeling like a traditional quiz. Players take control of a central base and must defend it from incoming numbered asteroids.
