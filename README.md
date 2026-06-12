@@ -12,7 +12,10 @@ Instead of answering multiple-choice questions, players engage in "Math Combat."
 Built entirely in a **single HTML file** using HTML5 Canvas, CSS, and Vanilla JavaScript. Audio is generated procedurally using the **Web Audio API**.
 
 ---
+## Preview Link
+https://tky2006.github.io/mathStrom/
 
+---
 ## 🎮 How to Play
 
 1. Open `index.html` in any modern web browser.
@@ -75,3 +78,4 @@ double-click index.html
 ---
 
 *MathStorm — Defend the base with the power of addition! 🌪️*
+
