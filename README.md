@@ -72,16 +72,6 @@ Simply open `index.html` in a web browser — **no installation, no server, no i
 
 ```
 double-click index.html
-```
-
-Or via a local server:
-```bash
-# Python 3
-python -m http.server 8000
-
-# Then open: http://localhost:8000
-```
-
 ---
 
 *MathStorm — Defend the base with the power of addition! 🌪️*
