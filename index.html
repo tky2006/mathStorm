@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathStorm – Secondary School Math Adventure</title>
+  <meta name="description" content="MathStorm is an exciting secondary school math minigame. Catch falling answers, survive 10 rounds, earn stars and top scores!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── CSS RESET & ROOT TOKENS ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:    #0a0a1a;
+      --bg-mid:     #0f0f2e;
+      --accent1:    #7c3aed;
+      --accent2:    #a855f7;
+      --accent3:    #06b6d4;
+      --accent4:    #f59e0b;
+      --accent5:    #10b981;
+      --danger:     #ef4444;
+      --text-main:  #e2e8f0;
+      --text-dim:   #94a3b8;
+      --glass:      rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.1);
+      --radius:     16px;
+      --radius-sm:  8px;
+      --shadow-glow: 0 0 30px rgba(124,58,237,0.4);
+      --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ─── STARFIELD BACKGROUND ─────────────────────────────────────── */
+    #starfield {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ─── SCREEN SYSTEM ────────────────────────────────────────────── */
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 10;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .screen.hidden {
+      opacity: 0; pointer-events: none; transform: scale(0.96);
+    }
+
+    /* ─── COMMON GLASS CARD ────────────────────────────────────────── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      padding: 2.5rem;
+      max-width: 640px;
+      width: 90%;
+    }
+
+    /* ─── BUTTONS ──────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.85rem 2.2rem;
+      border: none; border-radius: 50px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      position: relative; overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.15);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.5);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 30px rgba(124,58,237,0.7); transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--accent3), #0891b2);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(6,182,212,0.4);
+    }
+    .btn-secondary:hover { box-shadow: 0 6px 30px rgba(6,182,212,0.6); transform: translateY(-2px); }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #b91c1c);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--accent2);
+      color: var(--accent2);
+    }
+    .btn-outline:hover { background: rgba(168,85,247,0.15); transform: translateY(-2px); }
+
+    /* ─── START SCREEN ─────────────────────────────────────────────── */
+    #startScreen .logo-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      color: var(--accent3);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    #startScreen h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(168,85,247,0.5));
+      margin-bottom: 0.4rem;
+    }
+    #startScreen .tagline {
+      font-size: 1rem; color: var(--text-dim);
+      margin-bottom: 2rem;
+    }
+
+    .feature-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .feature-item {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 1rem 0.75rem;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .feature-item:hover { border-color: var(--accent2); background: rgba(168,85,247,0.1); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .feature-label { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
+
+    .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ─── INSTRUCTIONS SCREEN ──────────────────────────────────────── */
+    #instructionScreen h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .instruction-list {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 0.85rem;
+      margin-bottom: 1.8rem;
+    }
+    .instruction-list li {
+      display: flex; align-items: flex-start; gap: 0.85rem;
+      font-size: 0.92rem; line-height: 1.5;
+    }
+    .inst-icon {
+      min-width: 2rem; height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .math-topics {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .topic-chip {
+      background: rgba(6,182,212,0.15);
+      border: 1px solid rgba(6,182,212,0.3);
+      border-radius: 50px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.78rem;
+      color: var(--accent3);
+      font-weight: 600;
+    }
+
+    /* ─── GAME SCREEN ──────────────────────────────────────────────── */
+    #gameScreen {
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 0;
+    }
+
+    /* HUD */
+    #hud {
+      width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      background: rgba(10,10,26,0.85);
+      border-bottom: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+    .hud-section { display: flex; align-items: center; gap: 1rem; }
+    .hud-item { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+    .hud-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; }
+    .hud-value { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+    .hud-value.accent { color: var(--accent4); }
+    .hud-value.danger { color: var(--danger); }
+    .hud-value.cyan   { color: var(--accent3); }
+
+    /* Lives hearts */
+    #livesDisplay { display: flex; gap: 0.3rem; }
+    .heart { font-size: 1.3rem; transition: transform 0.3s, opacity 0.3s; }
+    .heart.lost { opacity: 0.2; filter: grayscale(1); transform: scale(0.8); }
+
+    /* Timer ring */
+    .timer-ring-wrap { position: relative; width: 52px; height: 52px; }
+    .timer-ring-wrap svg { transform: rotate(-90deg); position: absolute; inset: 0; }
+    #timerRingBg { stroke: rgba(255,255,255,0.1); }
+    #timerRingFg { stroke: var(--accent3); stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+    .timer-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700;
+    }
+
+    /* Round badge */
+    #roundBadge {
+      font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      padding: 0.3rem 1rem; border-radius: 50px; color: #fff;
+    }
+
+    /* Mute button */
+    #muteBtn {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 50px; padding: 0.4rem 0.9rem;
+      font-size: 1.1rem; cursor: pointer; transition: var(--transition); color: var(--text-main);
+    }
+    #muteBtn:hover { background: rgba(255,255,255,0.1); }
+
+    /* ─── GAME ARENA ─────────────────────────────────────────────── */
+    #arena { flex: 1; position: relative; width: 100%; overflow: hidden; }
+
+    /* EQUATION PANEL */
+    #equationPanel {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center; z-index: 5; pointer-events: none;
+    }
+    #topicLabel {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--accent3); margin-bottom: 0.5rem;
+    }
+    #equationDisplay {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2.4rem);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 30px rgba(168,85,247,0.6);
+      letter-spacing: 0.05em;
+      line-height: 1.4;
+      background: rgba(10,10,26,0.8);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 1rem 2rem;
+      backdrop-filter: blur(10px);
+      min-width: 280px;
+      white-space: pre-line;
+    }
+    #questionHint { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.6rem; }
+
+    /* FALLING BUBBLES */
+    .bubble {
+      position: absolute; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700;
+      cursor: pointer; z-index: 10;
+      animation: fall linear forwards;
+      border: 2px solid rgba(255,255,255,0.2);
+      transition: transform 0.15s;
+    }
+    .bubble:hover { transform: scale(1.12) !important; box-shadow: 0 0 25px rgba(255,255,255,0.4) !important; }
+    @keyframes fall {
+      from { top: -80px; }
+      to   { top: 110%; }
+    }
+    .bubble.correct-flash { animation: correctPop 0.45s ease forwards; }
+    .bubble.wrong-flash   { animation: wrongShake 0.4s ease forwards; }
+    @keyframes correctPop {
+      0%   { transform: scale(1); opacity: 1; }
+      50%  { transform: scale(1.6); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    @keyframes wrongShake {
+      0%,100% { transform: translateX(0) scale(1); }
+      25%     { transform: translateX(-10px) scale(0.9); }
+      75%     { transform: translateX(10px) scale(0.9); }
+    }
+
+    /* Floating score popup */
+    .score-popup {
+      position: absolute;
+      font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 900;
+      pointer-events: none; z-index: 30;
+      animation: popUp 1.2s ease forwards;
+      transform: translateX(-50%) translateY(-50%);
+    }
+    @keyframes popUp {
+      0%   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+      60%  { opacity: 1; transform: translateX(-50%) translateY(-90px) scale(1.15); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-120px) scale(0.8); }
+    }
+
+    /* Particle burst */
+    .particle {
+      position: absolute; border-radius: 50%;
+      pointer-events: none; z-index: 25;
+      animation: particleFly 0.8s ease-out forwards;
+    }
+    @keyframes particleFly {
+      0%   { opacity: 1; transform: translate(0,0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+    }
+
+    /* Round transition overlay */
+    #roundTransition {
+      position: absolute; inset: 0;
+      background: rgba(10,10,26,0.93);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.4s;
+    }
+    #roundTransition.show { opacity: 1; pointer-events: auto; }
+    .rt-round { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--accent3); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .rt-label { font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 7vw, 4rem); font-weight: 900; background: linear-gradient(135deg, var(--accent2), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .rt-topic { font-size: 1rem; color: var(--text-dim); margin-top: 0.5rem; }
+    .rt-stars { font-size: 2.5rem; margin-top: 1rem; letter-spacing: 0.5rem; }
+
+    /* Combo multiplier */
+    #comboDisplay {
+      position: absolute; top: 10px; right: 10px;
+      font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 900;
+      color: var(--accent4); opacity: 0; transition: opacity 0.3s; z-index: 20;
+      text-shadow: 0 0 15px rgba(245,158,11,0.8);
+    }
+    #comboDisplay.show { opacity: 1; }
+
+    /* ─── END SCREEN ───────────────────────────────────────────────── */
+    #endScreen h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 900;
+      margin-bottom: 0.3rem; text-align: center;
+    }
+    #endScreen .end-subtitle { color: var(--text-dim); font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem; }
+
+    .stars-display { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .star-end {
+      font-size: 3rem; opacity: 0;
+      transform: scale(0) rotate(-30deg);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .star-end.earned { opacity: 1; transform: scale(1) rotate(0deg); }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .stat-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.9rem; text-align: center; }
+    .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+    .performance-bar-wrap { margin-bottom: 1.5rem; }
+    .perf-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.4rem; }
+    .perf-bar { height: 10px; background: var(--glass); border-radius: 50px; overflow: hidden; border: 1px solid var(--glass-border); }
+    .perf-fill { height: 100%; background: linear-gradient(90deg, var(--accent1), var(--accent3)); border-radius: 50px; width: 0%; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ─── PROGRESS DOTS ─────────────────────────────────────────── */
+    #progressDots { display: flex; gap: 0.35rem; align-items: center; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s, transform 0.3s; }
+    .dot.active { background: var(--accent3); transform: scale(1.4); }
+    .dot.done   { background: var(--accent5); }
+
+    /* ─── PAUSE OVERLAY ─────────────────────────────────────────── */
+    #pauseOverlay {
+      position: absolute; inset: 0;
+      background: rgba(10,10,26,0.9); backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    #pauseOverlay.show { opacity: 1; pointer-events: auto; }
+    #pauseOverlay h2 { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 900; color: var(--accent2); margin-bottom: 2rem; }
+
+    /* ─── MISC ANIMATIONS ──────────────────────────────────────────── */
+    @keyframes floatUp {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    @keyframes shakeScreen {
+      0%,100% { transform: translate(0); }
+      20% { transform: translate(-6px, 3px); }
+      40% { transform: translate(6px, -3px); }
+      60% { transform: translate(-4px, 2px); }
+      80% { transform: translate(4px, -2px); }
+    }
+    .screen-shake { animation: shakeScreen 0.4s ease; }
+
+    /* ─── SCROLLABLE INSTRUCTIONS ──────────────────────────────────── */
+    #instructionScreen .card { max-height: 85vh; overflow-y: auto; }
+    #instructionScreen .card::-webkit-scrollbar { width: 4px; }
+    #instructionScreen .card::-webkit-scrollbar-track { background: transparent; }
+    #instructionScreen .card::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 2px; }
+
+    /* ─── MOBILE FRIENDLY ───────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid   { grid-template-columns: repeat(2, 1fr); }
+      #equationDisplay { font-size: 1.2rem; padding: 0.75rem 1rem; min-width: 200px; }
+      .bubble { font-size: 0.9rem; }
+      .hud-value { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- STARFIELD CANVAS -->
+<canvas id="starfield"></canvas>
+
+<!-- ════ SCREEN 1: START ════ -->
+<div class="screen" id="startScreen">
+  <div class="card" style="text-align:center; animation: floatUp 3s ease-in-out infinite;">
+    <p class="logo-badge">⚡ Secondary School Math</p>
+    <h1>MathStorm</h1>
+    <p class="tagline">Catch the right answer before it hits the ground!</p>
+
+    <div class="feature-grid">
+      <div class="feature-item"><div class="feature-icon">⚡</div><div class="feature-label">10 Rounds</div></div>
+      <div class="feature-item"><div class="feature-icon">❤️</div><div class="feature-label">3 Lives</div></div>
+      <div class="feature-item"><div class="feature-icon">⏱️</div><div class="feature-label">15s Timer</div></div>
+      <div class="feature-item"><div class="feature-icon">⭐</div><div class="feature-label">Star Rating</div></div>
+      <div class="feature-item"><div class="feature-icon">🔥</div><div class="feature-label">Combos</div></div>
+      <div class="feature-item"><div class="feature-icon">🧮</div><div class="feature-label">Real Math</div></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="startBtn" onclick="showScreen('instructionScreen')">▶ Play Now</button>
+      <button class="btn btn-outline" id="howBtn" onclick="showScreen('instructionScreen')">📖 How to Play</button>
+    </div>
+    <p style="margin-top:1rem; font-size:0.75rem; color:var(--text-dim);">Press ESC to pause during game</p>
+  </div>
+</div>
+
+<!-- ════ SCREEN 2: INSTRUCTIONS ════ -->
+<div class="screen hidden" id="instructionScreen">
+  <div class="card">
+    <h2>📖 How to Play</h2>
+
+    <ul class="instruction-list">
+      <li>
+        <div class="inst-icon">🎯</div>
+        <span>An equation with a missing value <strong>?</strong> appears in the centre of the screen.</span>
+      </li>
+      <li>
+        <div class="inst-icon">🫧</div>
+        <span>Five numbered bubbles fall from the top. <strong>Click the correct bubble</strong> that answers the equation!</span>
+      </li>
+      <li>
+        <div class="inst-icon">⏱️</div>
+        <span>You have <strong>15 seconds</strong> per question. Time out = lose a life and next round!</span>
+      </li>
+      <li>
+        <div class="inst-icon">❤️</div>
+        <span>Start with <strong>3 lives</strong>. Wrong click or timeout = lose a life. Zero lives = Game Over!</span>
+      </li>
+      <li>
+        <div class="inst-icon">🔥</div>
+        <span>Chain correct answers for a <strong>combo multiplier</strong> up to ×4 for massive bonus points!</span>
+      </li>
+      <li>
+        <div class="inst-icon">⭐</div>
+        <span>Earn <strong>1–3 stars</strong> per round based on how fast you answer. Complete all 10 rounds to see your final rating!</span>
+      </li>
+      <li>
+        <div class="inst-icon">🧮</div>
+        <span>Questions cover real Form 1–5 maths — algebra, geometry, fractions, percentages, indices, and more!</span>
+      </li>
+    </ul>
+
+    <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:0.75rem; font-weight:600;">Topics covered:</p>
+    <div class="math-topics">
+      <span class="topic-chip">Algebra</span>
+      <span class="topic-chip">Geometry</span>
+      <span class="topic-chip">Fractions</span>
+      <span class="topic-chip">Indices</span>
+      <span class="topic-chip">Percentages</span>
+      <span class="topic-chip">Linear Equations</span>
+      <span class="topic-chip">Ratio &amp; Proportion</span>
+      <span class="topic-chip">Statistics</span>
+      <span class="topic-chip">Trigonometry</span>
+      <span class="topic-chip">Quadratics</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="startGameBtn" onclick="startGame()">🚀 Let's Go!</button>
+      <button class="btn btn-outline" onclick="showScreen('startScreen')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 3: GAME ════ -->
+<div class="screen hidden" id="gameScreen">
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-section">
+      <div class="hud-item">
+        <span class="hud-label">Score</span>
+        <span class="hud-value accent" id="scoreDisplay">0</span>
+      </div>
+      <div id="progressDots"></div>
+    </div>
+
+    <div class="hud-section" style="flex-direction:column; gap:0.25rem; align-items:center;">
+      <span id="roundBadge">Round 1 / 10</span>
+      <div class="timer-ring-wrap">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle id="timerRingBg" cx="26" cy="26" r="22" fill="none" stroke-width="4"/>
+          <circle id="timerRingFg" cx="26" cy="26" r="22" fill="none" stroke-width="4"
+                  stroke-dasharray="138.2" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-text" id="timerText">15</div>
+      </div>
+    </div>
+
+    <div class="hud-section" style="flex-direction:column; align-items:flex-end; gap:0.4rem;">
+      <div id="livesDisplay">
+        <span class="heart" id="h1">❤️</span>
+        <span class="heart" id="h2">❤️</span>
+        <span class="heart" id="h3">❤️</span>
+      </div>
+      <button id="muteBtn" onclick="toggleMute()">🔊</button>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div id="arena">
+    <!-- Equation panel -->
+    <div id="equationPanel">
+      <div id="topicLabel">ALGEBRA</div>
+      <div id="equationDisplay">x + 3 = 7&#10;x = ?</div>
+      <div id="questionHint">Click the correct bubble!</div>
+    </div>
+
+    <!-- Combo -->
+    <div id="comboDisplay">🔥 ×2 COMBO!</div>
+
+    <!-- Round Transition Overlay -->
+    <div id="roundTransition">
+      <div class="rt-round" id="rtRound">ROUND 1 COMPLETE</div>
+      <div class="rt-label" id="rtLabel">ROUND 2</div>
+      <div class="rt-topic" id="rtTopic">Next: Algebra</div>
+      <div class="rt-stars" id="rtStars">⭐⭐⭐</div>
+    </div>
+
+    <!-- Pause Overlay -->
+    <div id="pauseOverlay">
+      <h2>⏸ Paused</h2>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="resumeGame()">▶ Resume</button>
+        <button class="btn btn-danger" onclick="endGame(true)">🏠 Quit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 4: END ════ -->
+<div class="screen hidden" id="endScreen">
+  <div class="card">
+    <h2 id="endTitle">🎉 STORM COMPLETE!</h2>
+    <p class="end-subtitle" id="endSubtitle">You survived all 10 rounds!</p>
+
+    <div class="stars-display" id="starsDisplay">
+      <div class="star-end" id="se1">⭐</div>
+      <div class="star-end" id="se2">⭐</div>
+      <div class="star-end" id="se3">⭐</div>
+    </div>
+
+    <div class="performance-bar-wrap">
+      <div class="perf-label">
+        <span>Accuracy</span>
+        <span id="accuracyPct">0%</span>
+      </div>
+      <div class="perf-bar"><div class="perf-fill" id="perfFill"></div></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value accent" id="finalScore">0</div>
+        <div class="stat-label">Final Score</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" style="color:var(--accent5);" id="correctCount">0</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" style="color:var(--danger);" id="wrongCount">0</div>
+        <div class="stat-label">Missed</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value cyan" id="bestCombo">0</div>
+        <div class="stat-label">Best Combo</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" style="color:var(--accent4);" id="roundsWon">0</div>
+        <div class="stat-label">Rounds Won</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="totalStars">0 / 30</div>
+        <div class="stat-label">Stars</div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="playAgainBtn" onclick="restartGame()">🔄 Play Again</button>
+      <button class="btn btn-secondary" onclick="showScreen('startScreen')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   AUDIO ENGINE  (Web Audio API — zero external files)
+══════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+let muted = false;
+let bgGainNode = null;
+let bgOscillators = [];
+
+function initAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+}
+
+function playTone(freq, type, duration, vol, delay) {
+  if (muted || !audioCtx) return;
+  vol   = vol   || 0.3;
+  delay = delay || 0;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration);
+  } catch(e){}
+}
+
+function playSoundCorrect() {
+  initAudio();
+  playTone(523.25, 'sine', 0.1, 0.3, 0);
+  playTone(659.25, 'sine', 0.1, 0.3, 0.1);
+  playTone(783.99, 'sine', 0.18, 0.3, 0.2);
+}
+
+function playSoundWrong() {
+  initAudio();
+  playTone(200, 'sawtooth', 0.15, 0.3, 0);
+  playTone(150, 'sawtooth', 0.25, 0.25, 0.12);
+}
+
+function playSoundTimeout() {
+  initAudio();
+  playTone(330, 'triangle', 0.2, 0.2, 0);
+  playTone(220, 'triangle', 0.3, 0.2, 0.18);
+}
+
+function playSoundRoundStart() {
+  initAudio();
+  [0, 0.12, 0.24].forEach(function(d, i) {
+    playTone([392, 494, 587][i], 'sine', 0.15, 0.3, d);
+  });
+}
+
+function playSoundCombo() {
+  initAudio();
+  [523, 659, 784, 1047].forEach(function(f, i) {
+    playTone(f, 'sine', 0.12, 0.25, i * 0.08);
+  });
+}
+
+function playSoundGameOver() {
+  initAudio();
+  [440, 370, 294, 220].forEach(function(f, i) {
+    playTone(f, 'sawtooth', 0.3, 0.3, i * 0.18);
+  });
+}
+
+function playSoundVictory() {
+  initAudio();
+  [523, 659, 784, 1047, 784, 880, 1047].forEach(function(f, i) {
+    playTone(f, 'sine', 0.2, 0.3, i * 0.13);
+  });
+}
+
+/* ──────────────────────────────────────────────────────────────
+   FULL CHIPTUNE BACKGROUND MUSIC ENGINE
+   Multi-track: Melody + Counter-melody + Bass + Pad chords + Drums
+   Loops continuously. BPM = 140 (upbeat, energetic study/game feel)
+────────────────────────────────────────────────────────────── */
+var bgLoopTimer = null;
+var bgMasterGain = null;
+
+// Note frequency helper  (A4=440)
+function noteHz(semitones) {
+  return 440 * Math.pow(2, semitones / 12);
+}
+
+// Named note table relative to C4=0
+var N = {
+  C4:0, D4:2, E4:4, F4:5, G4:7, A4:9, B4:11,
+  C5:12,D5:14,E5:16,F5:17,G5:19,A5:21,B5:23,
+  C3:-12,D3:-10,E3:-8,F3:-7,G3:-5,A3:-3,B3:-1,
+  C6:24,D6:26,E6:28,
+  R: null   // rest
+};
+// Convert semitone offset → frequency (C4 = 261.63 Hz)
+function s2f(s) { return s === null ? null : 261.63 * Math.pow(2, s / 12); }
+
+// ── SONG DATA ──────────────────────────────────────────────
+// Each entry: [semitones_from_C4, durationInBeats]
+// BPM 140 → 1 beat = 60/140 ≈ 0.4286s
+var BPM      = 140;
+var BEAT     = 60 / BPM;          // seconds per beat
+var BAR      = 4 * BEAT;          // 4 beats per bar
+
+// Main melody (8 bars, loops)
+var MELODY = [
+  // Bar 1-2: bright ascending phrase
+  [N.E5,1],[N.G5,1],[N.A5,0.5],[N.G5,0.5],[N.E5,1],
+  [N.D5,1],[N.C5,1],[N.D5,0.5],[N.E5,0.5],[N.G5,1],
+  // Bar 3-4
+  [N.A5,1],[N.G5,0.5],[N.A5,0.5],[N.C6,1],[N.B5,1],
+  [N.A5,1],[N.G5,1],[N.E5,2],
+  // Bar 5-6: answering phrase going down
+  [N.G5,1],[N.E5,1],[N.D5,1],[N.C5,1],
+  [N.D5,1],[N.E5,1],[N.G5,0.5],[N.A5,0.5],[N.G5,1],
+  // Bar 7-8: resolving cadence
+  [N.E5,1],[N.D5,0.5],[N.E5,0.5],[N.G5,1],[N.A5,1],
+  [N.G5,1],[N.E5,1],[N.C5,2]
+];
+
+// Counter melody (runs in parallel, lower register)
+var COUNTER = [
+  [N.C5,2],[N.B4,2],[N.A4,2],[N.G4,2],
+  [N.F4,2],[N.G4,2],[N.A4,2],[N.G4,2],
+  [N.E4,2],[N.F4,2],[N.G4,2],[N.A4,2],
+  [N.G4,2],[N.E4,2],[N.C4,4]
+];
+
+// Bass line (root+fifth pattern, 1 beat per note)
+var BASS = [
+  N.C3,N.C3,N.G3,N.G3,  // C chord
+  N.A3,N.A3,N.E3,N.E3,  // Am
+  N.F3,N.F3,N.C3,N.C3,  // F
+  N.G3,N.G3,N.D3,N.D3,  // G
+  N.C3,N.C3,N.G3,N.G3,
+  N.A3,N.A3,N.E3,N.E3,
+  N.F3,N.F3,N.G3,N.G3,
+  N.C3,N.C3,N.C3,N.C3
+];
+
+// Pad chords (stacked sines, 2 beats each)
+var PADS = [
+  // C major: C E G
+  [[N.C4,N.E4,N.G4], 4],
+  // A minor: A C E
+  [[N.A3,N.C4,N.E4], 4],
+  // F major: F A C
+  [[N.F3,N.A3,N.C4], 4],
+  // G major: G B D
+  [[N.G3,N.B3,N.D4], 4],
+  [[N.C4,N.E4,N.G4], 4],
+  [[N.A3,N.C4,N.E4], 4],
+  [[N.F3,N.A3,N.C4], 4],
+  [[N.G3,N.B3,N.D4], 4],
+];
+
+// ── SCHEDULE ONE NOTE ──────────────────────────────────────
+function schedNote(freq, startT, durBeats, type, vol, gainNode) {
+  if (!freq || !audioCtx) return;
+  try {
+    var osc  = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(gainNode);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startT);
+    var dur = durBeats * BEAT;
+    // attack / decay envelope
+    gain.gain.setValueAtTime(0.001, startT);
+    gain.gain.linearRampToValueAtTime(vol, startT + Math.min(0.02, dur * 0.1));
+    gain.gain.setValueAtTime(vol, startT + dur * 0.7);
+    gain.gain.linearRampToValueAtTime(0.001, startT + dur * 0.95);
+    osc.start(startT);
+    osc.stop(startT + dur);
+    bgOscillators.push(osc);
+  } catch(e){}
+}
+
+// ── SCHEDULE DRUM HIT ──────────────────────────────────────
+function schedDrum(type, startT, gainNode) {
+  if (!audioCtx) return;
+  try {
+    if (type === 'kick') {
+      var osc  = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(gainNode);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, startT);
+      osc.frequency.exponentialRampToValueAtTime(40, startT + 0.12);
+      gain.gain.setValueAtTime(0.6, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.18);
+      osc.start(startT); osc.stop(startT + 0.2);
+      bgOscillators.push(osc);
+    } else if (type === 'snare') {
+      // noise burst via buffer
+      var bufSize = audioCtx.sampleRate * 0.1;
+      var buf     = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      var data    = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      var src  = audioCtx.createBufferSource();
+      var bpf  = audioCtx.createBiquadFilter();
+      var gain = audioCtx.createGain();
+      src.buffer = buf;
+      bpf.type = 'bandpass'; bpf.frequency.value = 1800; bpf.Q.value = 0.6;
+      src.connect(bpf); bpf.connect(gain); gain.connect(gainNode);
+      gain.gain.setValueAtTime(0.3, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.1);
+      src.start(startT); src.stop(startT + 0.1);
+      bgOscillators.push(src);
+    } else if (type === 'hihat') {
+      var bufSize2 = audioCtx.sampleRate * 0.04;
+      var buf2     = audioCtx.createBuffer(1, bufSize2, audioCtx.sampleRate);
+      var data2    = buf2.getChannelData(0);
+      for (var j = 0; j < bufSize2; j++) data2[j] = Math.random() * 2 - 1;
+      var src2  = audioCtx.createBufferSource();
+      var hpf   = audioCtx.createBiquadFilter();
+      var gain2 = audioCtx.createGain();
+      src2.buffer = buf2;
+      hpf.type = 'highpass'; hpf.frequency.value = 7000;
+      src2.connect(hpf); hpf.connect(gain2); gain2.connect(gainNode);
+      gain2.gain.setValueAtTime(0.12, startT);
+      gain2.gain.exponentialRampToValueAtTime(0.001, startT + 0.04);
+      src2.start(startT); src2.stop(startT + 0.05);
+      bgOscillators.push(src2);
+    }
+  } catch(e){}
+}
+
+// ── SCHEDULE ONE FULL LOOP (8 bars) ───────────────────────
+function scheduleMusicLoop(startT) {
+  if (muted || !audioCtx || !bgMasterGain) return;
+
+  var totalBars  = 8;
+  var loopLen    = totalBars * BAR;      // seconds for one loop
+
+  // --- Melody track ---
+  var melGain = audioCtx.createGain();
+  melGain.gain.value = 0.22;
+  melGain.connect(bgMasterGain);
+  var t = startT;
+  for (var m = 0; m < MELODY.length; m++) {
+    schedNote(s2f(MELODY[m][0]), t, MELODY[m][1], 'square', 0.5, melGain);
+    t += MELODY[m][1] * BEAT;
+  }
+
+  // --- Counter melody ---
+  var cntGain = audioCtx.createGain();
+  cntGain.gain.value = 0.12;
+  cntGain.connect(bgMasterGain);
+  t = startT;
+  for (var c = 0; c < COUNTER.length; c++) {
+    schedNote(s2f(COUNTER[c][0]), t, COUNTER[c][1], 'triangle', 0.5, cntGain);
+    t += COUNTER[c][1] * BEAT;
+  }
+
+  // --- Bass track ---
+  var bassGain = audioCtx.createGain();
+  bassGain.gain.value = 0.28;
+  bassGain.connect(bgMasterGain);
+  t = startT;
+  for (var b = 0; b < BASS.length; b++) {
+    schedNote(s2f(BASS[b]), t, 0.85, 'sawtooth', 0.5, bassGain);
+    t += BEAT;
+  }
+
+  // --- Pad chords ---
+  var padGain = audioCtx.createGain();
+  padGain.gain.value = 0.07;
+  padGain.connect(bgMasterGain);
+  t = startT;
+  for (var p = 0; p < PADS.length; p++) {
+    var chord  = PADS[p][0];
+    var beats  = PADS[p][1];
+    for (var n = 0; n < chord.length; n++) {
+      schedNote(s2f(chord[n]), t, beats, 'sine', 0.5, padGain);
+    }
+    t += beats * BEAT;
+  }
+
+  // --- Drum pattern (repeats every 2 bars) ---
+  var drumGain = audioCtx.createGain();
+  drumGain.gain.value = 1.0;
+  drumGain.connect(bgMasterGain);
+  // 2-bar drum loop, repeated 4 times to fill 8 bars
+  for (var rep = 0; rep < 4; rep++) {
+    var dt = startT + rep * 2 * BAR;
+    // Beat 1: kick + hihat
+    schedDrum('kick',  dt + 0 * BEAT, drumGain);
+    schedDrum('hihat', dt + 0 * BEAT, drumGain);
+    // Beat 1.5: hihat
+    schedDrum('hihat', dt + 0.5 * BEAT, drumGain);
+    // Beat 2: snare + hihat
+    schedDrum('snare', dt + 1 * BEAT, drumGain);
+    schedDrum('hihat', dt + 1 * BEAT, drumGain);
+    // Beat 2.5: hihat
+    schedDrum('hihat', dt + 1.5 * BEAT, drumGain);
+    // Beat 3: kick + hihat
+    schedDrum('kick',  dt + 2 * BEAT, drumGain);
+    schedDrum('hihat', dt + 2 * BEAT, drumGain);
+    // Beat 3.5: hihat + extra kick (syncopated)
+    schedDrum('hihat', dt + 2.5 * BEAT, drumGain);
+    schedDrum('kick',  dt + 2.75 * BEAT, drumGain);
+    // Beat 4: snare + hihat
+    schedDrum('snare', dt + 3 * BEAT, drumGain);
+    schedDrum('hihat', dt + 3 * BEAT, drumGain);
+    // Beat 4.5: hihat
+    schedDrum('hihat', dt + 3.5 * BEAT, drumGain);
+    // Extra hihats for second bar (offset by BAR)
+    schedDrum('kick',  dt + BAR + 0 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 0 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 0.5 * BEAT, drumGain);
+    schedDrum('snare', dt + BAR + 1 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 1 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 1.5 * BEAT, drumGain);
+    schedDrum('kick',  dt + BAR + 2 * BEAT, drumGain);
+    schedDrum('kick',  dt + BAR + 2.5 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 2.75 * BEAT, drumGain);
+    schedDrum('snare', dt + BAR + 3 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 3 * BEAT, drumGain);
+    schedDrum('hihat', dt + BAR + 3.5 * BEAT, drumGain);
+  }
+
+  // Schedule next loop just before this one ends
+  bgLoopTimer = setTimeout(function() {
+    if (!muted && bgMasterGain) scheduleMusicLoop(startT + loopLen);
+  }, (loopLen - 0.3) * 1000);
+}
+
+function startBGMusic() {
+  if (muted || !audioCtx) return;
+  stopBGMusic();
+  try {
+    bgMasterGain = audioCtx.createGain();
+    bgMasterGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+    // Fade in gently
+    bgMasterGain.gain.linearRampToValueAtTime(0.55, audioCtx.currentTime + 1.5);
+    bgMasterGain.connect(audioCtx.destination);
+    bgGainNode = bgMasterGain;  // keep reference for stopBGMusic
+    scheduleMusicLoop(audioCtx.currentTime + 0.05);
+  } catch(e){}
+}
+
+function stopBGMusic() {
+  if (bgLoopTimer) { clearTimeout(bgLoopTimer); bgLoopTimer = null; }
+  bgOscillators.forEach(function(o) { try { o.stop(); } catch(e){} });
+  bgOscillators = [];
+  if (bgMasterGain) { try { bgMasterGain.disconnect(); } catch(e){} bgMasterGain = null; }
+  if (bgGainNode && bgGainNode !== bgMasterGain) {
+    try { bgGainNode.disconnect(); } catch(e){}
+  }
+  bgGainNode = null;
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  if (muted) stopBGMusic();
+  else startBGMusic();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STARFIELD
+══════════════════════════════════════════════════════════════ */
+var sfCanvas = document.getElementById('starfield');
+var sfCtx    = sfCanvas.getContext('2d');
+var stars    = [];
+
+function resizeStarfield() {
+  sfCanvas.width  = window.innerWidth;
+  sfCanvas.height = window.innerHeight;
+  stars = [];
+  for (var i = 0; i < 150; i++) {
+    stars.push({
+      x:  Math.random() * sfCanvas.width,
+      y:  Math.random() * sfCanvas.height,
+      r:  Math.random() * 1.5 + 0.2,
+      a:  Math.random(),
+      da: (Math.random() - 0.5) * 0.008,
+      s:  Math.random() * 0.25 + 0.05
+    });
+  }
+}
+resizeStarfield();
+window.addEventListener('resize', resizeStarfield);
+
+function animateStarfield() {
+  sfCtx.clearRect(0, 0, sfCanvas.width, sfCanvas.height);
+  var grd = sfCtx.createLinearGradient(0, 0, 0, sfCanvas.height);
+  grd.addColorStop(0, '#050510');
+  grd.addColorStop(1, '#0a0a1a');
+  sfCtx.fillStyle = grd;
+  sfCtx.fillRect(0, 0, sfCanvas.width, sfCanvas.height);
+  for (var i = 0; i < stars.length; i++) {
+    var s = stars[i];
+    s.a += s.da;
+    if (s.a <= 0.05 || s.a >= 1) s.da *= -1;
+    s.y += s.s;
+    if (s.y > sfCanvas.height) s.y = 0;
+    sfCtx.beginPath();
+    sfCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    sfCtx.fillStyle = 'rgba(255,255,255,' + s.a + ')';
+    sfCtx.fill();
+  }
+  requestAnimationFrame(animateStarfield);
+}
+animateStarfield();
+
+/* ══════════════════════════════════════════════════════════════
+   QUESTION BANK  (Secondary School Topics)
+══════════════════════════════════════════════════════════════ */
+var QUESTION_BANK = [
+  // ALGEBRA
+  { topic:'Algebra',        eq:'x + 7 = 15\nx = ?',              answer:8,    distractors:[3,5,6,9,10,12] },
+  { topic:'Algebra',        eq:'3x = 21\nx = ?',                 answer:7,    distractors:[3,6,8,9,14,18] },
+  { topic:'Algebra',        eq:'2x - 4 = 10\nx = ?',             answer:7,    distractors:[3,5,6,8,9,14] },
+  { topic:'Algebra',        eq:'5x + 2 = 27\nx = ?',             answer:5,    distractors:[3,4,6,7,9,25] },
+  { topic:'Algebra',        eq:'x² = 64\nx = ? (positive)',      answer:8,    distractors:[4,6,7,9,12,32] },
+  // FRACTIONS
+  { topic:'Fractions',      eq:'3/4 × 20 = ?',                   answer:15,   distractors:[5,10,12,16,18,20] },
+  { topic:'Fractions',      eq:'2/5 of 35 = ?',                  answer:14,   distractors:[5,7,10,12,16,21] },
+  { topic:'Fractions',      eq:'1/2 + 1/4 = ?\n(in quarters)',   answer:3,    distractors:[1,2,4,5,6,8] },
+  { topic:'Fractions',      eq:'7/8 - 3/8 = ?\n(in eighths)',    answer:4,    distractors:[1,2,3,5,6,7] },
+  // PERCENTAGES
+  { topic:'Percentages',    eq:'20% of 80 = ?',                  answer:16,   distractors:[4,8,12,18,20,24] },
+  { topic:'Percentages',    eq:'15% of 60 = ?',                  answer:9,    distractors:[3,6,10,12,15,18] },
+  { topic:'Percentages',    eq:'8 is ?% of 40',                  answer:20,   distractors:[5,10,15,25,30,40] },
+  { topic:'Percentages',    eq:'Increase 50 by 30%\n= ?',        answer:65,   distractors:[15,55,60,70,75,80] },
+  // INDICES
+  { topic:'Indices',        eq:'2⁵ = ?',                         answer:32,   distractors:[8,16,24,25,36,64] },
+  { topic:'Indices',        eq:'3³ = ?',                         answer:27,   distractors:[6,9,18,21,24,30] },
+  { topic:'Indices',        eq:'4² + 3² = ?',                    answer:25,   distractors:[7,14,20,21,28,30] },
+  { topic:'Indices',        eq:'√144 = ?',                       answer:12,   distractors:[6,9,11,13,14,18] },
+  { topic:'Indices',        eq:'√81 = ?',                        answer:9,    distractors:[3,6,8,10,11,27] },
+  // GEOMETRY
+  { topic:'Geometry',       eq:'Area of rectangle\n6 × 9 = ?',   answer:54,   distractors:[15,18,27,36,45,63] },
+  { topic:'Geometry',       eq:'Angles in triangle\n= ?°',       answer:180,  distractors:[90,120,270,360,540,720] },
+  { topic:'Geometry',       eq:'Perimeter of square\nside = 8, P = ?', answer:32, distractors:[16,24,40,48,56,64] },
+  { topic:'Geometry',       eq:'Area of triangle\nb=10, h=6\nA = ?', answer:30, distractors:[16,20,24,40,48,60] },
+  // RATIO
+  { topic:'Ratio',          eq:'Simplify 12:18\n= 2 : ?',        answer:3,    distractors:[4,6,8,9,12,24] },
+  { topic:'Ratio',          eq:'3 : 5 :: 9 : ?',                 answer:15,   distractors:[5,10,12,18,20,25] },
+  { topic:'Ratio',          eq:'Divide 48 in 1:3\nSmaller part = ?', answer:12, distractors:[6,8,16,24,36,40] },
+  // LINEAR EQUATIONS
+  { topic:'Linear Equations', eq:'y = 2x + 1\nx = 4, y = ?',    answer:9,    distractors:[3,5,7,8,10,13] },
+  { topic:'Linear Equations', eq:'4x - 7 = 17\nx = ?',          answer:6,    distractors:[2,4,5,7,8,10] },
+  // STATISTICS
+  { topic:'Statistics',     eq:'Mean of\n4, 6, 8, 10, 12 = ?',   answer:8,    distractors:[4,5,6,7,9,10] },
+  { topic:'Statistics',     eq:'Median of\n3, 7, 9, 15, 20 = ?', answer:9,    distractors:[3,7,8,10,15,20] },
+  { topic:'Statistics',     eq:'Mode of\n2,4,4,5,6,4,7 = ?',     answer:4,    distractors:[2,3,5,6,7,14] },
+  // TRIGONOMETRY
+  { topic:'Trigonometry',   eq:'sin 90° = ?',                    answer:1,    distractors:[0, -1, 2, 90, 0, 45] },
+  { topic:'Trigonometry',   eq:'cos 0° = ?',                     answer:1,    distractors:[0, -1, 2, 90, 60, 45] },
+  { topic:'Trigonometry',   eq:'tan 45° = ?',                    answer:1,    distractors:[0, -1, 2, 45, 90, 0] },
+];
+
+/* ══════════════════════════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════════════════════════ */
+var TOTAL_ROUNDS  = 10;
+var LIVES_MAX     = 3;
+var ROUND_TIME    = 15;
+var BUBBLES_COUNT = 5;
+var CIRCUMFERENCE = 2 * Math.PI * 22;
+
+var state = {};
+
+function initState() {
+  state = {
+    round:         0,
+    score:         0,
+    lives:         LIVES_MAX,
+    combo:         0,
+    bestCombo:     0,
+    correct:       0,
+    wrong:         0,
+    timeouts:      0,
+    roundStars:    [],
+    paused:        false,
+    timerVal:      ROUND_TIME,
+    timerInterval: null,
+    bubbleFall:    [],
+    questionQueue: [],
+    activeQ:       null,
+    roundComplete: false,
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCREEN NAVIGATION
+══════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.add('hidden'); });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   START / RESTART
+══════════════════════════════════════════════════════════════ */
+function startGame() {
+  initAudio();
+  initState();
+  buildQuestionQueue();
+  showScreen('gameScreen');
+  buildProgressDots();
+  updateHUD();
+  startBGMusic();
+  startRound();
+}
+
+function restartGame() {
+  stopBGMusic();
+  clearAllBubbles();
+  clearInterval(state.timerInterval);
+  startGame();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   QUESTION QUEUE
+══════════════════════════════════════════════════════════════ */
+function buildQuestionQueue() {
+  var shuffled = QUESTION_BANK.slice().sort(function() { return Math.random() - 0.5; });
+  state.questionQueue = shuffled.slice(0, TOTAL_ROUNDS);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HUD
+══════════════════════════════════════════════════════════════ */
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = state.score.toLocaleString();
+  document.getElementById('roundBadge').textContent   = 'Round ' + state.round + ' / ' + TOTAL_ROUNDS;
+  updateLives();
+  updateProgressDots();
+}
+
+function updateLives() {
+  for (var i = 1; i <= LIVES_MAX; i++) {
+    var h = document.getElementById('h' + i);
+    if (i > state.lives) h.classList.add('lost'); else h.classList.remove('lost');
+  }
+}
+
+function buildProgressDots() {
+  var pd = document.getElementById('progressDots');
+  pd.innerHTML = '';
+  for (var i = 0; i < TOTAL_ROUNDS; i++) {
+    var d = document.createElement('div');
+    d.className = 'dot';
+    d.id = 'dot-' + i;
+    pd.appendChild(d);
+  }
+}
+
+function updateProgressDots() {
+  for (var i = 0; i < TOTAL_ROUNDS; i++) {
+    var d = document.getElementById('dot-' + i);
+    if (!d) continue;
+    d.classList.remove('active', 'done');
+    if (i < state.round - 1) d.classList.add('done');
+    else if (i === state.round - 1) d.classList.add('active');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════════════════════ */
+function startTimer() {
+  state.timerVal = ROUND_TIME;
+  renderTimer();
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(function() {
+    if (state.paused) return;
+    state.timerVal--;
+    renderTimer();
+    if (state.timerVal <= 0) {
+      clearInterval(state.timerInterval);
+      onTimeout();
+    }
+  }, 1000);
+}
+
+function renderTimer() {
+  var frac   = state.timerVal / ROUND_TIME;
+  var offset = CIRCUMFERENCE * (1 - frac);
+  var ring   = document.getElementById('timerRingFg');
+  ring.style.strokeDashoffset = offset;
+  var hue = frac > 0.5 ? 180 : frac > 0.25 ? 45 : 0;
+  ring.style.stroke = 'hsl(' + hue + ',90%,60%)';
+  var tt = document.getElementById('timerText');
+  tt.textContent = state.timerVal;
+  tt.style.color = state.timerVal <= 5 ? '#ef4444' : 'var(--text-main)';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROUND START
+══════════════════════════════════════════════════════════════ */
+function startRound() {
+  state.round++;
+  state.roundComplete = false;
+  updateHUD();
+  clearAllBubbles();
+
+  if (state.round > TOTAL_ROUNDS) { endGame(false); return; }
+
+  var q = state.questionQueue[state.round - 1];
+  state.activeQ = q;
+
+  document.getElementById('topicLabel').textContent = q.topic.toUpperCase();
+  document.getElementById('equationDisplay').textContent = q.eq;
+  document.getElementById('questionHint').textContent = 'Click the correct bubble!';
+
+  playSoundRoundStart();
+  spawnBubbles(q);
+  startTimer();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUBBLE SYSTEM
+══════════════════════════════════════════════════════════════ */
+var BUBBLE_COLORS = [
+  ['#7c3aed','#a855f7'],
+  ['#0891b2','#06b6d4'],
+  ['#059669','#10b981'],
+  ['#d97706','#f59e0b'],
+  ['#dc2626','#ef4444'],
+];
+
+function spawnBubbles(q) {
+  var arena  = document.getElementById('arena');
+  var arenaW = arena.offsetWidth;
+  var size   = 72;
+
+  // Build pool: correct + 4 distractors
+  var shuffled = q.distractors.slice().sort(function() { return Math.random() - 0.5; });
+  var pool = [q.answer].concat(shuffled.slice(0, BUBBLES_COUNT - 1));
+  pool.sort(function() { return Math.random() - 0.5; });
+
+  var step = arenaW / BUBBLES_COUNT;
+
+  pool.forEach(function(val, i) {
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    var colors = BUBBLE_COLORS[i % BUBBLE_COLORS.length];
+    var c1 = colors[0], c2 = colors[1];
+    bubble.style.background = 'linear-gradient(135deg,' + c1 + ',' + c2 + ')';
+    bubble.style.boxShadow  = '0 0 18px ' + c1 + 'aa, inset 0 0 10px rgba(255,255,255,0.1)';
+    bubble.style.width      = size + 'px';
+    bubble.style.height     = size + 'px';
+
+    var xPos = step * i + step / 2 - size / 2 + (Math.random() - 0.5) * 18;
+    xPos = Math.max(4, Math.min(arenaW - size - 4, xPos));
+    bubble.style.left = xPos + 'px';
+
+    // Speed: faster in later rounds
+    var speed = Math.max(4.5, 10 - state.round * 0.4);
+    bubble.style.animationDuration = speed + 's';
+    bubble.style.animationDelay    = (i * 0.25) + 's';
+
+    bubble.textContent = val;
+
+    (function(b, v) {
+      b.addEventListener('click', function() { onBubbleClick(b, v, q.answer); });
+    })(bubble, val);
+
+    bubble.addEventListener('animationend', function() {
+      if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+    });
+
+    arena.appendChild(bubble);
+    state.bubbleFall.push(bubble);
+  });
+}
+
+function clearAllBubbles() {
+  state.bubbleFall.forEach(function(b) { if (b.parentNode) b.parentNode.removeChild(b); });
+  state.bubbleFall = [];
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUBBLE CLICK
+══════════════════════════════════════════════════════════════ */
+function onBubbleClick(bubble, val, correct) {
+  if (state.roundComplete || state.paused) return;
+  state.roundComplete = true;
+  clearInterval(state.timerInterval);
+
+  var rect      = bubble.getBoundingClientRect();
+  var arenaRect = document.getElementById('arena').getBoundingClientRect();
+  var bx = rect.left - arenaRect.left + rect.width  / 2;
+  var by = rect.top  - arenaRect.top  + rect.height / 2;
+
+  // Stop all other bubbles from falling by pausing animation
+  state.bubbleFall.forEach(function(b) {
+    if (b !== bubble) b.style.animationPlayState = 'paused';
+  });
+
+  if (val === correct) {
+    // CORRECT
+    state.correct++;
+    state.combo++;
+    if (state.combo > state.bestCombo) state.bestCombo = state.combo;
+
+    var timeBonus = state.timerVal * 10;
+    var comboMult = Math.min(4, state.combo);
+    var points    = (100 + timeBonus) * comboMult;
+    state.score  += Math.round(points);
+
+    bubble.style.animation = 'none';
+    bubble.classList.add('correct-flash');
+    playSoundCorrect();
+    spawnParticles(bx, by, '#a855f7');
+    showScorePopup(bx, by, '+' + Math.round(points), '#a855f7');
+
+    if (state.combo >= 2) { playSoundCombo(); showCombo(state.combo); }
+
+    var stars = state.timerVal >= 12 ? 3 : state.timerVal >= 7 ? 2 : 1;
+    state.roundStars.push(stars);
+    setTimeout(function() { showRoundTransition(stars, true); }, 600);
+
+  } else {
+    // WRONG
+    state.wrong++;
+    state.combo = 0;
+    state.lives--;
+    updateLives();
+
+    bubble.style.animation = 'none';
+    bubble.classList.add('wrong-flash');
+    playSoundWrong();
+    shakeArena();
+    showScorePopup(bx, by, '✕ Wrong!', '#ef4444');
+    state.roundStars.push(0);
+
+    if (state.lives <= 0) {
+      setTimeout(function() { endGame(false); }, 900);
+      return;
+    }
+    setTimeout(function() { showRoundTransition(0, false); }, 700);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TIMEOUT
+══════════════════════════════════════════════════════════════ */
+function onTimeout() {
+  if (state.roundComplete) return;
+  state.roundComplete = true;
+  state.timeouts++;
+  state.combo = 0;
+  state.lives--;
+  updateLives();
+  playSoundTimeout();
+  shakeArena();
+  state.roundStars.push(0);
+  showScorePopup(
+    document.getElementById('arena').offsetWidth / 2,
+    document.getElementById('arena').offsetHeight / 2,
+    '⏱ Time Out!', '#f59e0b'
+  );
+
+  if (state.lives <= 0) {
+    setTimeout(function() { endGame(false); }, 800);
+    return;
+  }
+  setTimeout(function() { showRoundTransition(0, false); }, 1000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROUND TRANSITION
+══════════════════════════════════════════════════════════════ */
+function showRoundTransition(stars, won) {
+  clearAllBubbles();
+  var rt       = document.getElementById('roundTransition');
+  var nextRnd  = state.round + 1;
+
+  document.getElementById('rtRound').textContent =
+    won ? 'ROUND ' + state.round + ' COMPLETE!' : 'ROUND ' + state.round + ' — MISSED';
+
+  if (nextRnd <= TOTAL_ROUNDS) {
+    document.getElementById('rtLabel').textContent = 'ROUND ' + nextRnd;
+    var nextQ = state.questionQueue[nextRnd - 1];
+    document.getElementById('rtTopic').textContent = 'Next: ' + (nextQ ? nextQ.topic : '—');
+  } else {
+    document.getElementById('rtLabel').textContent = 'FINAL ROUND!';
+    document.getElementById('rtTopic').textContent = 'Last question done!';
+  }
+
+  var starStr = '';
+  for (var i = 0; i < stars; i++) starStr += '⭐';
+  for (var j = 0; j < 3 - stars; j++) starStr += '☆';
+  document.getElementById('rtStars').textContent = starStr;
+
+  rt.classList.add('show');
+  updateHUD();
+
+  setTimeout(function() {
+    rt.classList.remove('show');
+    if (state.round >= TOTAL_ROUNDS) { endGame(false); }
+    else { startRound(); }
+  }, 2000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COMBO DISPLAY
+══════════════════════════════════════════════════════════════ */
+function showCombo(n) {
+  var cd     = document.getElementById('comboDisplay');
+  var labels = ['','','🔥 ×2 COMBO!','⚡ ×3 STORM!','💥 ×4 BLITZ!'];
+  cd.textContent = labels[Math.min(n, 4)];
+  cd.classList.add('show');
+  clearTimeout(cd._t);
+  cd._t = setTimeout(function() { cd.classList.remove('show'); }, 2000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PARTICLES
+══════════════════════════════════════════════════════════════ */
+function spawnParticles(x, y, color) {
+  var arena = document.getElementById('arena');
+  for (var i = 0; i < 14; i++) {
+    var p     = document.createElement('div');
+    p.className = 'particle';
+    var angle = (Math.PI * 2 / 14) * i;
+    var dist  = 60 + Math.random() * 60;
+    p.style.left       = x + 'px';
+    p.style.top        = y + 'px';
+    p.style.width      = (6 + Math.random() * 6) + 'px';
+    p.style.height     = p.style.width;
+    p.style.background = color;
+    p.style.setProperty('--dx', (Math.cos(angle) * dist) + 'px');
+    p.style.setProperty('--dy', (Math.sin(angle) * dist) + 'px');
+    arena.appendChild(p);
+    setTimeout(function(el) { if (el.parentNode) el.parentNode.removeChild(el); }, 900, p);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCORE POPUP
+══════════════════════════════════════════════════════════════ */
+function showScorePopup(x, y, text, color) {
+  var arena = document.getElementById('arena');
+  var el    = document.createElement('div');
+  el.className   = 'score-popup';
+  el.textContent = text;
+  el.style.left  = x + 'px';
+  el.style.top   = y + 'px';
+  el.style.color = color;
+  arena.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 1300);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCREEN SHAKE
+══════════════════════════════════════════════════════════════ */
+function shakeArena() {
+  var arena = document.getElementById('arena');
+  arena.classList.add('screen-shake');
+  setTimeout(function() { arena.classList.remove('screen-shake'); }, 500);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PAUSE
+══════════════════════════════════════════════════════════════ */
+function pauseGame() {
+  state.paused = true;
+  document.getElementById('pauseOverlay').classList.add('show');
+  state.bubbleFall.forEach(function(b) { b.style.animationPlayState = 'paused'; });
+}
+function resumeGame() {
+  state.paused = false;
+  document.getElementById('pauseOverlay').classList.remove('show');
+  state.bubbleFall.forEach(function(b) { b.style.animationPlayState = 'running'; });
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var gs = document.getElementById('gameScreen');
+    if (!gs.classList.contains('hidden')) {
+      if (state.paused) resumeGame(); else pauseGame();
+    }
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   END GAME
+══════════════════════════════════════════════════════════════ */
+function endGame(quit) {
+  clearInterval(state.timerInterval);
+  clearAllBubbles();
+  stopBGMusic();
+
+  var totalQ    = state.correct + state.wrong + state.timeouts;
+  var accuracy  = totalQ > 0 ? Math.round((state.correct / totalQ) * 100) : 0;
+  var totalStars = state.roundStars.reduce(function(a, b) { return a + b; }, 0);
+  var maxStars  = TOTAL_ROUNDS * 3;
+  var pct       = totalStars / maxStars;
+  var finalStars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : pct >= 0.2 ? 1 : 0;
+
+  if (quit) {
+    document.getElementById('endTitle').textContent    = '🚪 Game Abandoned';
+    document.getElementById('endSubtitle').textContent = 'You left after round ' + state.round;
+    playSoundGameOver();
+  } else if (state.lives <= 0) {
+    document.getElementById('endTitle').textContent    = '💀 Game Over!';
+    document.getElementById('endSubtitle').textContent = 'You ran out of lives!';
+    playSoundGameOver();
+  } else {
+    document.getElementById('endTitle').textContent    = '🎉 STORM COMPLETE!';
+    document.getElementById('endSubtitle').textContent = 'You survived all 10 rounds!';
+    playSoundVictory();
+  }
+
+  document.getElementById('finalScore').textContent   = state.score.toLocaleString();
+  document.getElementById('correctCount').textContent = state.correct;
+  document.getElementById('wrongCount').textContent   = state.wrong + state.timeouts;
+  document.getElementById('bestCombo').textContent    = state.bestCombo;
+  document.getElementById('roundsWon').textContent    = state.correct;
+  document.getElementById('totalStars').textContent   = totalStars + ' / ' + maxStars;
+  document.getElementById('accuracyPct').textContent  = accuracy + '%';
+
+  showScreen('endScreen');
+
+  // Animate stars
+  for (var i = 1; i <= 3; i++) {
+    document.getElementById('se' + i).classList.remove('earned');
+  }
+  setTimeout(function() {
+    for (var i = 1; i <= 3; i++) {
+      if (i <= finalStars) {
+        (function(idx) {
+          setTimeout(function() {
+            document.getElementById('se' + idx).classList.add('earned');
+          }, (idx - 1) * 320);
+        })(i);
+      }
+    }
+  }, 150);
+
+  // Animate accuracy bar
+  setTimeout(function() {
+    document.getElementById('perfFill').style.width = accuracy + '%';
+  }, 250);
+}
+
+/* ── INIT ── */
+showScreen('startScreen');
+</script>
+</body>
+</html>
